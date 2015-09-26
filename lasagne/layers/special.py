@@ -354,5 +354,5 @@ def _meshgrid(height, width):
     x_t_flat = x_t.reshape((1, -1))
     y_t_flat = y_t.reshape((1, -1))
     ones = T.ones_like(x_t_flat)
-    grid = T.concatenate([x_t_flat, y_t_flat, ones], axis=0)
+    grid = T.concatenate([x_t_flat, y_t_flat], axis=0)
     return grid
