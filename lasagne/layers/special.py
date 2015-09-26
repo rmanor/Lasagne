@@ -218,7 +218,7 @@ class TransformerLayer(MergeLayer):
 
         input_shp, loc_shp = self.input_shapes
 
-        if loc_shp[-1] != 6 or len(loc_shp) != 2:
+        if loc_shp[-1] != 1 or len(loc_shp) != 2:
             raise ValueError("The localization network must have "
                              "output shape: (batch_size, 6)")
         if len(input_shp) != 4:
@@ -240,15 +240,17 @@ class TransformerLayer(MergeLayer):
 
 def _transform(theta, input, downsample_factor):
     num_batch, num_channels, height, width = input.shape
-    theta = T.reshape(theta, (-1, 2, 3))
+    theta = T.reshape(theta, (-1, 1))
 
     # grid of (x_t, y_t, 1), eq (1) in ref [1]
     out_height = T.cast(height / downsample_factor[0], 'int64')
     out_width = T.cast(width / downsample_factor[1], 'int64')
     grid = _meshgrid(out_height, out_width)
+   
+    zeros = T.zeros_like(theta)
+    padded_theta = T.concatenate([theta, zeros], axis=1)
+    T_g = padded_theta.dimshuffle(0, 1, 'x') + grid.dimshuffle('x', 0, 1)
 
-    # Transform A x (x_t, y_t, 1)^T -> (x_s, y_s)
-    T_g = T.dot(theta, grid)
     x_s = T_g[:, 0]
     y_s = T_g[:, 1]
     x_s_flat = x_s.flatten()
